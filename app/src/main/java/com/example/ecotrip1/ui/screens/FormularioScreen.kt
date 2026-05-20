@@ -31,7 +31,12 @@ fun FormularioScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("EcoTrip 2026") }
+                title = { Text("EcoTrip 2026") },
+                colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor =
+                            MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor =
+                MaterialTheme.colorScheme.onPrimaryContainer)
             )
         },
         floatingActionButton = {
@@ -58,7 +63,9 @@ fun FormularioScreen(
                             viewModel.esViajeGrupal
                         )
                     }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer
             ) {
                 Text("Ir")
             }
@@ -81,7 +88,8 @@ fun FormularioScreen(
                 value=viewModel.destino,
                 onValueChange = { viewModel.updateDestino(it) },
                 label = { Text("Destino") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+
             )
             OutlinedTextField(
                 value =viewModel.diasDuracion,
