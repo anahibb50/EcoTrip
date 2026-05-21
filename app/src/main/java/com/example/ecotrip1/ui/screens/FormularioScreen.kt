@@ -1,6 +1,7 @@
 package com.example.ecotrip1.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -8,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import com.example.ecotrip1.presentation.viewmodel.EcoTripViewModel
 import com.example.ecotrip1.ui.navigation.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.text.input.KeyboardType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +39,9 @@ fun FormularioScreen(
 
     //Leer datos del disco
     LaunchedEffect(nameDisk) {
-        nombreViajero = nameDisk
+        if (nameDisk.isNotBlank()) {
+            nombreViajero = nameDisk
+        }
     }
     LaunchedEffect(transporteFromDisk) {
         tipoTransporte = transporteFromDisk
@@ -60,23 +64,18 @@ fun FormularioScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    val dias = viewModel.diasDuracion.toIntOrNull()
-
-                    if (
-                        viewModel.nombreViajero.isNotBlank() &&
-                        viewModel.destino.isNotBlank() &&
-                        dias != null &&
-                        dias > 0
-                    ) {
-                        onIrResumen(
-                            viewModel.nombreViajero,
-                            viewModel.destino,
-                            dias,
-                            tipoTransporte,
-                            soloRutasBajaHuella,
-                            viewModel.esViajeGrupal
-                        )
-                    }
+                    viewModel.diasDuracion.toIntOrNull()?.let { dias ->
+                        if (viewModel.validarFormulario()) {
+                            onIrResumen(
+                                nombreViajero,
+                                viewModel.destino,
+                                dias,
+                                tipoTransporte,
+                                soloRutasBajaHuella,
+                                viewModel.esViajeGrupal
+                            )
+                        }
+                    } ?: viewModel.validarFormulario()
                 },
                 containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                 contentColor = MaterialTheme.colorScheme.onTertiaryContainer
@@ -93,16 +92,20 @@ fun FormularioScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ){
             OutlinedTextField(
-                value = viewModel.nombreViajero,
-                onValueChange = { viewModel.updateNombreViajero(it)
+                value = nombreViajero,
+                onValueChange = {
+                    nombreViajero = it
+                    viewModel.updateNombreViajero(it)
                     viewModel.saveName(it)},
                 label = { Text("Nombre del viajero") },
+                isError = viewModel.mostrarError && viewModel.nombreViajero.isBlank(),
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
                 value=viewModel.destino,
                 onValueChange = { viewModel.updateDestino(it) },
                 label = { Text("Destino") },
+                isError = viewModel.mostrarError && viewModel.destino.isBlank(),
                 modifier = Modifier.fillMaxWidth(),
 
             )
@@ -110,6 +113,8 @@ fun FormularioScreen(
                 value =viewModel.diasDuracion,
                 onValueChange = { viewModel.updateDiasDuracion(it)},
                 label = { Text("Dias duración") },
+                isError = viewModel.mostrarError && viewModel.diasDuracion.toIntOrNull() == null,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
             ExposedDropdownMenuBox(

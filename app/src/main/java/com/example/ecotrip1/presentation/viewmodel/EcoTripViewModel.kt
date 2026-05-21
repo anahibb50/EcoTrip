@@ -29,6 +29,8 @@ class EcoTripViewModel (
         private set
     var tipoTransporte by mutableStateOf(stateHandle.get<String>("tipo_transporte") ?: "Tren")
         private set
+    var mostrarError by mutableStateOf(false)
+        private set
 
     //Sobrevivir al stateHandle
     fun updateNombreViajero(newNombre: String) {
@@ -75,6 +77,15 @@ class EcoTripViewModel (
         viewModelScope.launch {
             globalPrefs.saveSoloRutasBajaHuella(interruptor)
         }
+    }
+    fun validarFormulario():Boolean{
+        val valido = diasDuracion.toIntOrNull()?.let { dias ->
+            nombreViajero.isNotBlank() &&
+                    destino.isNotBlank() &&
+                    dias > 0
+        } ?: false
+        mostrarError = !valido
+        return valido
     }
 
 
