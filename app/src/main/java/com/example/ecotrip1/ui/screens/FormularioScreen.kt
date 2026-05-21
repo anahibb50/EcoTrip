@@ -24,7 +24,7 @@ fun FormularioScreen(
 ){
     //Nombre viajero desde disco
     val nameDisk by viewModel.nameFromDisk.observeAsState("")
-    var nameViajero by remember { mutableStateOf(nameDisk) }
+    var nombreViajero by remember { mutableStateOf(nameDisk) }
     //Tipo transporte desde disco
     val transporteFromDisk by viewModel.tipoTransporteFromDisk.observeAsState("")
     var tipoTransporte by remember { mutableStateOf(transporteFromDisk) }
@@ -32,12 +32,12 @@ fun FormularioScreen(
     val opcionesTransporte = listOf("Tren", "Bicicleta", "Vehículo eléctrico")
     var expanded by remember { mutableStateOf(false) }
     //switch rutas baja huella
-    val rutasBajaHuellaDisk by viewModel.soloRutasBajaHuellaFromDisk.observeAsState("")
+    val rutasBajaHuellaDisk by viewModel.soloRutasBajaHuellaFromDisk.observeAsState(false)
     var soloRutasBajaHuella by remember { mutableStateOf(rutasBajaHuellaDisk) }
 
     //Leer datos del disco
     LaunchedEffect(nameDisk) {
-        nameViajero = nameDisk
+        nombreViajero = nameDisk
     }
     LaunchedEffect(transporteFromDisk) {
         tipoTransporte = transporteFromDisk
@@ -68,10 +68,6 @@ fun FormularioScreen(
                         dias != null &&
                         dias > 0
                     ) {
-                        viewModel.saveName(viewModel.nombreViajero)
-                        viewModel.saveTipoTransporte(tipoTransporte)
-                        viewModel.saveSoloRutasBajaHuella(soloRutasBajaHuella)
-
                         onIrResumen(
                             viewModel.nombreViajero,
                             viewModel.destino,
@@ -157,6 +153,7 @@ fun FormularioScreen(
                     onCheckedChange = {
                         soloRutasBajaHuella = it
                         viewModel.saveSoloRutasBajaHuella(it)  // disco
+                        viewModel.updateBajaHuellaCarbono(it)
                     }
                 )
             }
