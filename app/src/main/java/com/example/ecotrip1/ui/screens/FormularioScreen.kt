@@ -7,6 +7,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.ecotrip1.presentation.viewmodel.EcoTripViewModel
 import com.example.ecotrip1.ui.navigation.*
+import androidx.compose.runtime.livedata.observeAsState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,12 +22,29 @@ fun FormularioScreen(
         esViajeGrupal: Boolean
     ) -> Unit
 ){
-    var nombreViajero by remember { mutableStateOf("") }
-    var tipoTransporte by remember { mutableStateOf("Tren") }
-    var soloRutasBajaHuella by remember { mutableStateOf(false) }
-
+    //Nombre viajero desde disco
+    val nameDisk by viewModel.nameFromDisk.observeAsState("")
+    var nameViajero by remember { mutableStateOf(nameDisk) }
+    //Tipo transporte desde disco
+    val transporteFromDisk by viewModel.tipoTransporteFromDisk.observeAsState("")
+    var tipoTransporte by remember { mutableStateOf(transporteFromDisk) }
+    //Opciones transporte
     val opcionesTransporte = listOf("Tren", "Bicicleta", "Vehículo eléctrico")
     var expanded by remember { mutableStateOf(false) }
+    //switch rutas baja huella
+    val rutasBajaHuellaDisk by viewModel.soloRutasBajaHuellaFromDisk.observeAsState("")
+    var soloRutasBajaHuella by remember { mutableStateOf(rutasBajaHuellaDisk) }
+
+    //Leer datos del disco
+    LaunchedEffect(nameDisk) {
+        nameViajero = nameDisk
+    }
+    LaunchedEffect(transporteFromDisk) {
+        tipoTransporte = transporteFromDisk
+    }
+    LaunchedEffect(rutasBajaHuellaDisk) {
+        soloRutasBajaHuella = rutasBajaHuellaDisk
+    }
 
     Scaffold(
         topBar = {
@@ -45,17 +63,17 @@ fun FormularioScreen(
                     val dias = viewModel.diasDuracion.toIntOrNull()
 
                     if (
-                        nombreViajero.isNotBlank() &&
+                        viewModel.nombreViajero.isNotBlank() &&
                         viewModel.destino.isNotBlank() &&
                         dias != null &&
                         dias > 0
                     ) {
-                        viewModel.saveName(nombreViajero)
+                        viewModel.saveName(viewModel.nombreViajero)
                         viewModel.saveTipoTransporte(tipoTransporte)
                         viewModel.saveSoloRutasBajaHuella(soloRutasBajaHuella)
 
                         onIrResumen(
-                            nombreViajero,
+                            viewModel.nombreViajero,
                             viewModel.destino,
                             dias,
                             tipoTransporte,
@@ -79,8 +97,9 @@ fun FormularioScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ){
             OutlinedTextField(
-                value=nombreViajero,
-                onValueChange = { nombreViajero = it },
+                value = viewModel.nombreViajero,
+                onValueChange = { viewModel.updateNombreViajero(it)
+                    viewModel.saveName(it)},
                 label = { Text("Nombre del viajero") },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -120,6 +139,8 @@ fun FormularioScreen(
                             text = { Text(opcion) },
                             onClick = {
                                 tipoTransporte = opcion
+                                viewModel.saveTipoTransporte(opcion)
+                                viewModel.updateTipoTransporte(opcion)
                                 expanded = false
                             }
                         )
@@ -133,7 +154,10 @@ fun FormularioScreen(
                 Text("Solo rutas de baja huella")
                 Switch(
                     checked = soloRutasBajaHuella,
-                    onCheckedChange = { soloRutasBajaHuella = it }
+                    onCheckedChange = {
+                        soloRutasBajaHuella = it
+                        viewModel.saveSoloRutasBajaHuella(it)  // disco
+                    }
                 )
             }
             Row(
